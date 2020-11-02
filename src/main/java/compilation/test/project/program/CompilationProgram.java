@@ -6,7 +6,7 @@ import java.io.*;
 
 public class CompilationProgram {
     //путь до папки с программами
-    final static String PATH = "D:" + File.separator + "Tests";
+    final static String PATH = "D:\\Programs\\Programs_Java\\Compilation_Test_Project" + File.separator + "Tests";
     //правильно написанная программа
     final static String CORRECT_TEST = "Test1";
     //программа с ошибками
@@ -16,8 +16,8 @@ public class CompilationProgram {
 
     //метод executeProcess() исполняет выбранный .class файл в выбранной файловой директории
     public static void executeProcess(String file, String path) throws Exception {
-        String commands;
-        Process process = Runtime.getRuntime().exec(commands = "java -cp " + path + " " + file);
+        String commands = "java -cp " + path + " " + file;
+        Process process = Runtime.getRuntime().exec(commands);
         System.out.println(commands);
         //передача входных данных программе
         Writer writer = new OutputStreamWriter(process.getOutputStream());
@@ -27,7 +27,7 @@ public class CompilationProgram {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String line, output = "";
         while ((line = bufferedReader.readLine()) != null) {
-            output += line;
+            output += line + " ";
             //System.out.println(line);
         }
         //output - строка с выходными данными
