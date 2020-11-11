@@ -1,2 +1,3 @@
-compilation\test\project\tests\Test1.class
-compilation\test\project\program\CompilationProgram.class
+compilation\test\project\program\Compiler.class
+compilation\test\project\program\Executer.class
+compilation\test\project\program\Program.class
