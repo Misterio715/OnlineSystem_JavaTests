@@ -1,9 +1,6 @@
 package compilation.test.project.program;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +10,7 @@ public class Executer {
     private String input;
     private long memory;
     private long time;
+    private List<String> errorList = new ArrayList<String>();
     private final static int MBYTE = 1024 * 1024;
 
     public Executer(String path, String file, String input) {
@@ -20,26 +18,45 @@ public class Executer {
         this.file = file;
         this.input = input;
     }
-
-    public long getExecuteMemory() {
-        return  memory;
+    public Executer(String path, String file) {
+        this.path = path;
+        this.file = file;
     }
 
-    public long getExecuteTime() {
-        return time;
+    public void setInput(String input) {
+        this.input = input;
     }
+
+    public long getExecuteMemory() { return  memory / MBYTE; }
+
+    public long getExecuteTime() { return time; }
+
+    public String getErrors() { return concat(errorList); }
 
     private long getMemory() {
         return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
     }
 
-    public List<String> executeProcess() throws Exception {
+    private String concat(List<String> list) {
+        String output = "";
+        int k = 0;
+        for (String i : list) {
+            if (k++ > 0) {
+                output += " ";
+            }
+            output += i;
+        }
+        return output;
+    }
+
+    public String executeProcess() throws IOException {
         String commands = "java " + "-cp " + path + " " + file;
+        //System.out.println(commands);
         Process process;
         BufferedReader outputReader, errorReader;
         String line, error;
         List<String> outputList = new ArrayList<String>();
-        List<String> errorList = new ArrayList<String>();
+        //List<String> errorList = new ArrayList<String>();
         //--------------------------------------------------------------
         //System.gc();
         long startMemory = getMemory();
@@ -50,7 +67,6 @@ public class Executer {
         writer.close();
         outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-        System.out.println(commands);
         while ((line = outputReader.readLine()) != null) {
             outputList.add(line);
         }
@@ -60,15 +76,16 @@ public class Executer {
         time = System.currentTimeMillis() - startTime;
         memory = getMemory() - startMemory;
         //--------------------------------------------------------------
-        if (errorList.isEmpty()) {
-            System.out.println(outputList);
-            System.out.println("Expected execution information" + "\nRun time: " + time + "\nUsed memory: " + ((memory) / MBYTE));
-            return outputList;
+        /*if (errorList.isEmpty()) {
+            //System.out.println(outputList);
+            //System.out.println("Expected execution information" + "\nRun time: " + time + "\nUsed memory: " + ((memory) / MBYTE));
+            return concat(outputList);
         }
         else {
-            System.out.println(errorList);
-            System.out.println("Expected execution information" + "\nRun time: " + time + "\nUsed memory: " + ((memory) / MBYTE));
-            return errorList;
-        }
+            //System.out.println(errorList);
+            //System.out.println("Expected execution information" + "\nRun time: " + time + "\nUsed memory: " + ((memory) / MBYTE));
+            return concat(errorList);
+        }*/
+        return concat(outputList);
     }
 }

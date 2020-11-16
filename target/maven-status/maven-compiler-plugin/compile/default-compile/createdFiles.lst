@@ -1,3 +1,9 @@
+compilation\test\project\program\TestsJson.class
+compilation\test\project\program\PathsJson.class
+compilation\test\project\queue\Receive.class
+compilation\test\project\program\Program.class
+compilation\test\project\queue\Receive$1.class
+compilation\test\project\queue\Send.class
 compilation\test\project\program\Compiler.class
 compilation\test\project\program\Executer.class
-compilation\test\project\program\Program.class
+compilation\test\project\program\Tester.class

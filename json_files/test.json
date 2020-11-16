@@ -1,0 +1,7 @@
+[
+  {"input":"10 5","output":"15"},
+  {"input":"20 5","output":"25"},
+  {"input":"0 -10","output":"-10"},
+  {"input":"-5 5","output":"0"},
+  {"input":"0 -10","output":"-9"}
+]
