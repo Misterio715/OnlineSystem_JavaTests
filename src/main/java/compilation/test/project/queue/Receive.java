@@ -1,6 +1,6 @@
 package compilation.test.project.queue;
-import compilation.test.project.program.*;
 
+import compilation.test.project.program.Program;
 import com.rabbitmq.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,19 +11,22 @@ import java.util.concurrent.TimeoutException;
 
 @Profile("receive")
 public class Receive {
-    static Logger logger = LoggerFactory.getLogger(Receive.class);
+    private static Logger logger = LoggerFactory.getLogger(Receive.class);
+    private Channel channel;
+    private String queueName;
 
-    private final static String QUEUE_NAME = "inputqueue";
-
-    public static void main(String[] args) throws IOException, TimeoutException {
+    public void setConnection(String hostName, String queueName) throws IOException, TimeoutException {
+        this.queueName = queueName;
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
+        factory.setHost(hostName);
         Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
-        channel.queueDeclare(QUEUE_NAME,
-                true, false,false, null);
+        channel = connection.createChannel();
+        channel.queueDeclare(queueName,
+                false, false,false, null);
+    }
+
+    public void startReceive() throws IOException{
         logger.info("[!] Waiting for messages. To exit press Ctrl+C");
-        String returnMessage = null;
         Consumer consumer = new DefaultConsumer(channel){
             @Override
             public void handleDelivery(String consumerTag,
@@ -36,6 +39,6 @@ public class Receive {
                 Program.run(message);
             }
         };
-        channel.basicConsume(QUEUE_NAME, true, consumer);
+        channel.basicConsume(queueName, true, consumer);
     }
 }

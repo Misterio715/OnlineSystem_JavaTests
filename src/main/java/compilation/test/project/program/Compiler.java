@@ -1,5 +1,7 @@
 package compilation.test.project.program;
 
+import compilation.test.project.main.Starter;
+
 import javax.tools.*;
 import java.io.File;
 import java.util.Arrays;
@@ -12,6 +14,10 @@ public class Compiler {
     private Iterable<? extends JavaFileObject> fileObjects;
 
     public Compiler(String path, String file) {
+        try {
+            Starter.sender.sendMessage(String.format("{\"status\":\"Compiling\",\"answer_id\":%d}", Program.ID));
+        }
+        catch (Exception e) {}
         compiler = ToolProvider.getSystemJavaCompiler();
         diagnosticCollector = new DiagnosticCollector<JavaFileObject>();
         fileManager = compiler.getStandardFileManager(diagnosticCollector, null, null);

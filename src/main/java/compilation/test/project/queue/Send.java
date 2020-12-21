@@ -10,25 +10,24 @@ import org.springframework.context.annotation.Profile;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-/**
- * Created by Julia on 13.11.2020.
- */
 @Profile("send")
 public class Send {
-    static Logger logger = LoggerFactory.getLogger(Send.class);
-    private  static String QUEUE_NAME = "outputqueue";
+    private static Logger logger = LoggerFactory.getLogger(Send.class);
+    private static ConnectionFactory factory;
+    private static String queueName;
 
-    public static void sendMessage(String message) throws IOException, TimeoutException {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
+    public void setConnection(String hostName, String queueName) throws IOException, TimeoutException {
+        this.queueName = queueName;
+        factory = new ConnectionFactory();
+        factory.setHost(hostName);
+    }
+    public void sendMessage(String message) throws IOException, TimeoutException {
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
-        channel.queueDeclare(QUEUE_NAME, false,false,false,null);
-        //String message = "Welcome to RabbitMQ";
-        channel.basicPublish("", QUEUE_NAME,null, message.getBytes("utf-8"));
+        channel.queueDeclare(queueName, false,false,false,null);
+        channel.basicPublish("", queueName,null, message.getBytes("utf-8"));
         logger.info("[!] Send '" + message +"'" );
         channel.close();
         connection.close();
     }
 }
-

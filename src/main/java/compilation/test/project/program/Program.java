@@ -1,5 +1,6 @@
 package compilation.test.project.program;
 
+import compilation.test.project.main.Starter;
 import compilation.test.project.queue.*;
 import javax.tools.*;
 import com.google.gson.*;
@@ -7,17 +8,10 @@ import java.io.*;
 import java.util.*;
 
 public class Program {
-    //путь до папки с программами
-    final static String PATH = new File(".").getAbsolutePath().replace(".", File.separator) + "tests";
-    //правильно написанная программа
-    final static String CORRECT_TEST = "Test1";
-    //программа с ошибками
-    final static String FAIL_TEST = "Test2";
-    //программа сложения двух целых чисел
-    final static String ADD_TEST = "AdditionProgram";
-    //программа с бесконечным циклом
-    final static String INF_LOOP = "InfiniteLoop";
-    final static int MBYTE = 1024 * 1024;
+    public final static String MEMORY_ERROR = "Error occurred during initialization of VM\n" +
+            "Too small initial heap";
+    public final static int MBYTE = 1024 * 1024;
+    public static int ID;
 
     public static void run(String inputJson) {
         //BufferedReader reader;
@@ -28,35 +22,44 @@ public class Program {
             //pathsJson = gson.fromJson(reader, PathsJson.class);
             pathsJson = gson.fromJson(inputJson, PathsJson.class);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Json path file parse error");
         }
+
+        ID = pathsJson.getAnswer_id();
         String javaFilePath = pathsJson.getStudent_answer().replace("/", File.separator);
-        String file = javaFilePath.substring(javaFilePath.lastIndexOf(File.separator) + 1);
-        String path = javaFilePath.substring(0, javaFilePath.lastIndexOf(File.separator));
+        //String javaFileName = new File(javaFilePath, new File(javaFilePath).list()[0]).getName();
+        //javaFileName = javaFileName.substring(0, javaFileName.lastIndexOf("."));
+        String fileName = javaFilePath.substring(javaFilePath.lastIndexOf(File.separator) + 1);
+        String pathName = javaFilePath.substring(0, javaFilePath.lastIndexOf(File.separator));
         String jsonTestPath = pathsJson.getTests().replace("/", File.separator);
-        Compiler compileProgram = new Compiler(path, file);
-        Executer executeProgram = new Executer(path, file);
-        Map<Integer, String[]> testErrors;
-        String outputJson = "";
+
+        Compiler compileProgram = new Compiler(pathName, fileName);
+        Executer executeProgram = new Executer(pathName, fileName, pathsJson.getTime_limit(), pathsJson.getMemory_limit());
+
+        String outputJson = null;
+
         if (compileProgram.getTaskCall()) {
             System.out.println("Compilation is successful");
+            //System.gc();
             try {
-                //System.gc();
-                testErrors = Tester.getTests(executeProgram, jsonTestPath);
-                if (testErrors != null) {
-                    outputJson = String.format("{ \"Errors\":[%s], \"Resources\":{\"time\":\"%dms\", \"memory\":%d}, \"TestErrors\":{\"num_test\":%d, \"input\":\"%s\", \"output\":\"%s\"}, \"answer_id\":%d}",
-                            new ArrayList<String[]>(testErrors.values()).get(0)[0], executeProgram.getExecuteTime(), executeProgram.getExecuteMemory(), new ArrayList<Integer>(testErrors.keySet()).get(0),
-                            new ArrayList<String[]>(testErrors.values()).get(0)[1], new ArrayList<String[]>(testErrors.values()).get(0)[2], pathsJson.getAnswer_id());
+                outputJson = String.format("{\"status\":\"%s\",\"answer_id\":%d}", Tester.getTests(executeProgram, jsonTestPath), ID);
+            }
+            catch (NullPointerException e) {
+                System.out.println("Null output error");
+                try {
+                    Starter.sender.sendMessage(String.format("{\"status\":\"Null output error\",\"answer_id\":%d}", Program.ID));
                 }
-                else {
-                    outputJson = String.format("{ \"Errors\":[], \"Resources\":{}, \"TestErrors\":{}, \"answer_id\":%d}", pathsJson.getAnswer_id());
-                }
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
+                catch (Exception ex) { }
+            }
+            if (new File(javaFilePath + ".class").delete()) {
+                System.out.println(javaFilePath + ".class file deleted");
+            }
+            else {
+                System.out.println(javaFilePath + ".class file not deleted");
             }
         }
         else {
-            outputJson = "{ \"Errors\":[";
+            outputJson = "{\"status\":\"";
             int k = 0;
             for (Diagnostic<? extends JavaFileObject> diagnostic : compileProgram.getDiagnosticsList()) {
                 if (k++ > 0) {
@@ -72,15 +75,16 @@ public class Program {
                 System.out.println("Position: " + diagnostic.getPosition());
                 System.out.println("Source: " + diagnostic.getSource());
                 System.out.println("Start Position: " + diagnostic.getStartPosition());
-                outputJson += String.format("\"%s Message: %s Line: %s Column: %s\"",
-                        diagnostic.getCode(), diagnostic.getMessage(null), diagnostic.getLineNumber(), diagnostic.getColumnNumber());
+                outputJson += String.format("%s, Line %d", diagnostic.getMessage(null), diagnostic.getLineNumber());
             }
-            outputJson += String.format("], \"Resources\":{}, \"TestErrors\":{}, \"answer_id\":%d}", pathsJson.getAnswer_id());
+            outputJson += String.format("\",\"answer_id\":%d}", ID);
             System.out.println("----------------------------------");
             System.out.println("Compilation is not successful");
         }
         try {
-            Send.sendMessage(outputJson);
+            if (outputJson != null) {
+                Starter.sender.sendMessage(outputJson);
+            }
         }
         catch (Exception e) { }
         //System.out.println(outputJson);
@@ -92,10 +96,14 @@ class PathsJson {
     private String student_answer;
     private String required_form;
     private String tests;
+    private Long time_limit;
+    private Long memory_limit;
     private int answer_id;
 
     public String getStudent_answer() { return student_answer; }
     public String getRequired_form() {return required_form; }
     public String getTests() { return tests; }
+    public Long getTime_limit() { return time_limit; }
+    public Long getMemory_limit() { return memory_limit; }
     public int getAnswer_id() { return answer_id; }
 }
